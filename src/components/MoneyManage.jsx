@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useNavigate } from "react-router-dom";
-
+import getAuthConfig, { clearAuthData, isTokenValid } from "../utils/auth.js";
 import { backEndUrl } from "../utils/utils.js";
 
 const transactionTypeOptions = [
@@ -13,51 +13,142 @@ const transactionTypeOptions = [
 ];
 
 const MoneyManage = () => {
- 
-  //API's
-  const transactionsUrl=`${backEndUrl}/transactions`        
-
-  
-
+  // API's
+  const transactionsUrl = `${backEndUrl}/transactions`;
+  console.log(transactionsUrl, "Transaction URL");
 
   const navigate = useNavigate();
   const [selectTitle, setSelectTitle] = useState("");
   const [selectAmount, setSelectAmount] = useState("");
-  const [arr, setArr] = useState([]);
   const [selectType, setType] = useState(transactionTypeOptions[0].optionId);
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState("");
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [greeting, setGreeting] = useState("sir");
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState([]);
+  const [retryCount, setRetryCount] = useState(0);
 
   const username = localStorage.getItem("username");
 
-  // Create axios config with auth token
-  const getAuthConfig = () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      // Redirect to login if no token
-      navigate("/login");
-      return null;
-    }
-    return {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+  // Enhanced authentication error handler
+  const handleAuthError = async (error, operation = "") => {
+    console.error(
+      `Auth error during ${operation}:`,
+      error.response?.status,
+      error.response?.data
+    );
+
+    if (error.response?.status === 401) {
+      const errorMessage = error.response?.data?.message || "";
+
+      // Check if it's a token expiration error
+      if (
+        errorMessage.includes("expired") ||
+        errorMessage.includes("invalid") ||
+        errorMessage.includes("token")
+      ) {
+        // Try to refresh token if you have refresh token logic
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (refreshToken && retryCount < 1) {
+          try {
+            setRetryCount((prev) => prev + 1);
+            const refreshResponse = await axios.post(
+              `${backEndUrl}/auth/refresh`,
+              {
+                refreshToken: refreshToken,
+              }
+            );
+
+            if (refreshResponse.data?.token) {
+              localStorage.setItem("token", refreshResponse.data.token);
+              setError("");
+              return true; // Indicate that token was refreshed
+            }
+          } catch (refreshError) {
+            console.error("Token refresh failed:", refreshError);
+          }
+        }
       }
-    };
+
+      // If refresh failed or not available, clear auth and redirect
+      setError("Your session has expired. Please login again.");
+      setTimeout(() => {
+        clearAuthData();
+        navigate("/login");
+      }, 2000);
+    } else if (error.response?.status === 403) {
+      setError(
+        "Access denied. You don't have permission to perform this action."
+      );
+    } else {
+      setError(`An error occurred during ${operation}. Please try again.`);
+    }
+
+    return false;
   };
 
-  // Handle authentication errors
-  const handleAuthError = (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("username");
-      navigate("/login");
-    }
-  };
+  // Setup axios interceptor for automatic token handling
+  useEffect(() => {
+    const requestInterceptor = axios.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem("token");
+        if (token && isTokenValid(token)) {
+          config.headers.Authorization = `Bearer ${token}`;
+          console.log("Added token to request:", config.url);
+        } else {
+          console.log("No valid token for request:", config.url);
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    const responseInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          const refreshToken = localStorage.getItem("refreshToken");
+          if (refreshToken) {
+            try {
+              const refreshResponse = await axios.post(
+                `${backEndUrl}/auth/refresh`,
+                {
+                  refreshToken: refreshToken,
+                }
+              );
+
+              if (refreshResponse.data?.token) {
+                localStorage.setItem("token", refreshResponse.data.token);
+                originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.token}`;
+                return axios(originalRequest);
+              }
+            } catch (refreshError) {
+              console.error("Token refresh failed:", refreshError);
+              clearAuthData();
+              navigate("/login");
+              return Promise.reject(refreshError);
+            }
+          } else {
+            clearAuthData();
+            navigate("/login");
+          }
+        }
+
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, [navigate]);
 
   const handleExport = () => {
     if (transactions.length === 0) {
@@ -102,27 +193,90 @@ const MoneyManage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchTransactions = async () => {
+  // const fetchTransactions = async (isRetry = false) => {
+  //   try {
+  //     setLoading(true);
+  //     setError(""); // Clear previous errors
+
+  //     const config = getAuthConfig(navigate);
+  //     console.log('Auth config:', config);
+
+  //     if (!config) {
+  //       setError("Session expired. Please log in again.");
+  //       return;
+  //     }
+
+  //     console.log('Fetching transactions from:', transactionsUrl);
+  //     const response = await axios.get(transactionsUrl, config);
+  //     console.log('Fetch response:', response.data);
+
+  //     if (response.data?.data) {
+  //       setTransactions(response.data.data);
+  //     } else if (Array.isArray(response.data)) {
+  //       setTransactions(response.data);
+  //     } else {
+  //       console.error("Unexpected API response format:", response.data);
+  //       setTransactions([]);
+  //     }
+
+  //     // Reset retry count on success
+  //     setRetryCount(0);
+
+  //   } catch (error) {
+  //     console.error("Error fetching transactions:", error);
+
+  //     // Try to handle auth error and retry once
+  //     if (error.response?.status === 401 && !isRetry) {
+  //       const tokenRefreshed = await handleAuthError(error, 'fetch transactions');
+  //       if (tokenRefreshed) {
+  //         // Wait a bit and retry
+  //         setTimeout(() => fetchTransactions(true), 1000);
+  //         return;
+  //       }
+  //     } else {
+  //       handleAuthError(error, 'fetch transactions');
+  //       setTransactions([]);
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Initial data fetch
+  const fetchTransactions = async (isRetry = false) => {
     try {
       setLoading(true);
-      const config = getAuthConfig();
-      if (!config) return;
+      setError("");
 
-      const response = await axios.get(transactionsUrl,config
-      );
+      const config = getAuthConfig(navigate);
+      if (!config) {
+        setError("Session expired. Please log in again.");
+        return;
+      }
+
+      const response = await axios.get(transactionsUrl, config);
 
       if (response.data?.data) {
         setTransactions(response.data.data);
       } else if (Array.isArray(response.data)) {
         setTransactions(response.data);
       } else {
-        console.error("Unexpected API response format:", response.data);
         setTransactions([]);
       }
+
+      setRetryCount(0);
     } catch (error) {
-      console.error("Error fetching transactions:", error.message);
-      handleAuthError(error);
-      setError("Failed to load transactions. Please try again.");
+      console.error("Error fetching transactions:", error);
+
+      if (error.response?.status === 401) {
+        // Clear invalid token and redirect to login
+        clearAuthData();
+        navigate("/login");
+        setError("Session expired. Please log in again.");
+        return;
+      }
+
+      handleAuthError(error, "fetch transactions");
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -130,13 +284,31 @@ const MoneyManage = () => {
   };
 
   useEffect(() => {
-    // Check if user is authenticated
+    // Enhanced authentication check
     const token = localStorage.getItem("token");
-    if (!token) {
+    const username = localStorage.getItem("username");
+
+    console.log(
+      "Initial auth check - Token exists:",
+      !!token,
+      "Username:",
+      username
+    );
+
+    if (!token || !username) {
+      console.log("No token or username found");
+      clearAuthData();
       navigate("/login");
       return;
     }
-    
+
+    if (!isTokenValid(token)) {
+      console.log("Invalid token found");
+      clearAuthData();
+      navigate("/login");
+      return;
+    }
+
     fetchTransactions();
   }, [navigate]);
 
@@ -145,7 +317,7 @@ const MoneyManage = () => {
       setLoading(true);
       console.log("Deleting transaction with ID:", id);
 
-      const config = getAuthConfig();
+      const config = getAuthConfig(navigate);
       if (!config) return;
 
       await axios.delete(`${transactionsUrl}/${id}`, config);
@@ -157,8 +329,10 @@ const MoneyManage = () => {
       alert("Deleted successfully");
     } catch (error) {
       console.error("Delete error:", error);
-      handleAuthError(error);
-      alert("Failed to delete transaction");
+      const handled = await handleAuthError(error, "delete transaction");
+      if (!handled) {
+        alert("Failed to delete transaction");
+      }
     } finally {
       setLoading(false);
     }
@@ -189,23 +363,29 @@ const MoneyManage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectTitle || !selectAmount) {
+    if (!selectTitle.trim() || !selectAmount.trim()) {
       setError("Title and amount are required");
+      return;
+    }
+
+    const amount = parseFloat(selectAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setError("Please enter a valid amount");
       return;
     }
 
     setLoading(true);
     setError("");
 
-    const config = getAuthConfig();
+    const config = getAuthConfig(navigate);
     if (!config) {
       setLoading(false);
       return;
     }
 
     const newTransaction = {
-      title: selectTitle,
-      amount: parseFloat(selectAmount),
+      title: selectTitle.trim(),
+      amount: amount,
       type: selectType,
     };
 
@@ -239,7 +419,8 @@ const MoneyManage = () => {
         }
       } else {
         // Add new transaction
-        const response = await axios.post(transactionsUrl,
+        const response = await axios.post(
+          transactionsUrl,
           newTransaction,
           config
         );
@@ -263,8 +444,12 @@ const MoneyManage = () => {
       }
     } catch (error) {
       console.error("Submit error:", error);
-      handleAuthError(error);
-      setError(error.response?.data?.message || "Failed to submit transaction");
+      const handled = await handleAuthError(error, "submit transaction");
+      if (!handled) {
+        setError(
+          error.response?.data?.message || "Failed to submit transaction"
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -303,7 +488,7 @@ const MoneyManage = () => {
 
     try {
       setLoading(true);
-      const config = getAuthConfig();
+      const config = getAuthConfig(navigate);
       if (!config) return;
 
       await axios.delete(transactionsUrl, config);
@@ -312,8 +497,10 @@ const MoneyManage = () => {
       alert("All transactions deleted successfully.");
     } catch (error) {
       console.error("Delete All Error:", error);
-      handleAuthError(error);
-      alert("Failed to delete all transactions.");
+      const handled = await handleAuthError(error, "delete all transactions");
+      if (!handled) {
+        alert("Failed to delete all transactions.");
+      }
     } finally {
       setLoading(false);
     }
