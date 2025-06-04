@@ -1,15 +1,4 @@
-// const getAuthConfig = () => {
-//   const token = localStorage.getItem("token");
-//   if (!token) return null;
 
-//   return {
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//       "Content-Type": "application/json",
-//     },
-//   };
-// };
-// export default getAuthConfig;
 
 // utils/auth.js
 export const isTokenValid = (token) => {
@@ -42,34 +31,6 @@ export const clearAuthData = () => {
   localStorage.removeItem("username");
   localStorage.removeItem("refreshToken");
 };
-
-// const getAuthConfig = (navigate) => {
-//   const token = localStorage.getItem("token");
-  
-//   console.log('Getting auth config, token exists:', !!token);
-  
-//   if (!token) {
-//     console.log('No token found, redirecting to login');
-//     clearAuthData();
-//     if (navigate) navigate("/login");
-//     return null;
-//   }
-
-//   if (!isTokenValid(token)) {
-//     console.log('Invalid token, redirecting to login');
-//     clearAuthData();
-//     if (navigate) navigate("/login");
-//     return null;
-//   }
-  
-//   return {
-//     headers: {
-//       'Authorization': `Bearer ${token}`,
-//       'Content-Type': 'application/json'
-//     }
-//   };
-// };
-
 
 
 const getAuthConfig = (navigate) => {
