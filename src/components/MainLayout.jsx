@@ -7,10 +7,18 @@ const MainLayout = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
+  // const handleLogout = () => {
+  //   logout();
+  //   navigate("/login");
+  // };
   const handleLogout = () => {
+  const confirmed = window.confirm("Are you sure you want to logout?");
+  if (confirmed) {
     logout();
     navigate("/login");
-  };
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
