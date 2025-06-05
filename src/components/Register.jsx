@@ -2,7 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
-import { backEndUrl } from '../utils/utils.js';
+import { backEndUrl } from "../utils/utils.js";
 
 const Register = () => {
   // API's - Fixed: Added /api prefix to match your login pattern
@@ -29,14 +29,17 @@ const Register = () => {
   const validate = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Name is required";
-    else if (formData.name.trim().length < 2) newErrors.name = "Name must be at least 2 characters";
-    
+    else if (formData.name.trim().length < 2)
+      newErrors.name = "Name must be at least 2 characters";
+
     if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!isValidEmail(formData.email)) newErrors.email = "Enter a valid email";
-    
+    else if (!isValidEmail(formData.email))
+      newErrors.email = "Enter a valid email";
+
     if (!formData.password.trim()) newErrors.password = "Password is required";
-    else if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
-    
+    else if (formData.password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+
     return newErrors;
   };
 
@@ -53,6 +56,80 @@ const Register = () => {
     setServerError("");
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setServerError(""); // Fixed: Use setServerError instead of setError
+  //   setLoading(true);
+
+  //   // Client-side validation
+  //   const validationErrors = validate();
+  //   if (Object.keys(validationErrors).length > 0) {
+  //     setErrors(validationErrors);
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     console.log('Attempting registration to:', RegisterUrl); // Debug log
+  //     const { data } = await axios.post(RegisterUrl, {
+  //       name: formData.name.trim(),
+  //       email: formData.email.toLowerCase().trim(),
+  //       password: formData.password
+  //     });
+  //     console.log('Registration response:', data);
+
+  //     if (data.success) {
+  //       // Optional: Auto-login after registration
+  //       if (data.token) {
+  //         localStorage.setItem("token", data.token);
+  //         localStorage.setItem("username", data.user?.name || formData.name);
+  //         navigate("/");
+  //       } else {
+  //         // Redirect to login page if no auto-login
+  //         navigate("/login", {
+  //           state: {
+  //             message: "Registration successful! Please log in with your credentials.",
+  //             email: formData.email // Pre-fill email on login page
+  //           }
+  //         });
+  //       }
+  //     } else {
+  //       setServerError(data.message || "Registration failed. Please try again.");
+  //     }
+  //   } catch (err) {
+  //     console.error('Registration error:', err); // Debug log
+
+  //     if (err.response?.data?.message) {
+  //       setServerError(err.response.data.message);
+  //     } else if (err.response?.data?.errors) {
+  //       // Handle field-specific validation errors from backend
+  //       const backendErrors = {};
+  //       if (Array.isArray(err.response.data.errors)) {
+  //         err.response.data.errors.forEach(error => {
+  //           if (error.field) {
+  //             backendErrors[error.field] = error.message;
+  //           }
+  //         });
+  //         setErrors(backendErrors);
+  //       } else {
+  //         setServerError("Validation errors occurred. Please check your inputs.");
+  //       }
+  //     } else if (err.response?.status === 409) {
+  //       setServerError("Email already exists. Please use a different email or try logging in.");
+  //     } else if (err.response?.status === 404) {
+  //       setServerError("Registration endpoint not found. Please check server configuration.");
+  //     } else if (err.response?.status === 400) {
+  //       setServerError("Invalid registration data. Please check your inputs.");
+  //     } else if (err.response?.status === 422) {
+  //       setServerError("Validation error. Please check your inputs and try again.");
+  //     } else {
+  //       setServerError("An unexpected error occurred. Please try again.");
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError(""); // Fixed: Use setServerError instead of setError
@@ -67,58 +144,87 @@ const Register = () => {
     }
 
     try {
-      console.log('Attempting registration to:', RegisterUrl); // Debug log
-      const { data } = await axios.post(RegisterUrl, {
-        name: formData.name.trim(),
-        email: formData.email.toLowerCase().trim(),
-        password: formData.password
-      });
-      console.log('Registration response:', data);
+      console.log("Attempting registration to:", RegisterUrl); // Debug log
+
+      // Add timeout to prevent hanging requests
+      const { data } = await axios.post(
+        RegisterUrl,
+        {
+          name: formData.name.trim(),
+          email: formData.email.toLowerCase().trim(),
+          password: formData.password,
+        },
+        {
+          timeout: 8000, // 8 second timeout
+        }
+      );
+
+      console.log("Registration response:", data);
 
       if (data.success) {
         // Optional: Auto-login after registration
         if (data.token) {
           localStorage.setItem("token", data.token);
           localStorage.setItem("username", data.user?.name || formData.name);
+          // Navigate immediately without waiting
           navigate("/");
         } else {
           // Redirect to login page if no auto-login
           navigate("/login", {
             state: {
-              message: "Registration successful! Please log in with your credentials.",
-              email: formData.email // Pre-fill email on login page
-            }
+              message:
+                "Registration successful! Please log in with your credentials.",
+              email: formData.email, // Pre-fill email on login page
+            },
           });
         }
       } else {
-        setServerError(data.message || "Registration failed. Please try again.");
+        setServerError(
+          data.message || "Registration failed. Please try again."
+        );
       }
     } catch (err) {
-      console.error('Registration error:', err); // Debug log
-      
+      console.error("Registration error:", err); // Debug log
+
+      // Handle timeout specifically
+      if (err.code === "ECONNABORTED") {
+        setServerError(
+          "Request timed out. Please check your connection and try again."
+        );
+        return;
+      }
+
       if (err.response?.data?.message) {
         setServerError(err.response.data.message);
       } else if (err.response?.data?.errors) {
         // Handle field-specific validation errors from backend
         const backendErrors = {};
         if (Array.isArray(err.response.data.errors)) {
-          err.response.data.errors.forEach(error => {
+          err.response.data.errors.forEach((error) => {
             if (error.field) {
               backendErrors[error.field] = error.message;
             }
           });
           setErrors(backendErrors);
         } else {
-          setServerError("Validation errors occurred. Please check your inputs.");
+          setServerError(
+            "Validation errors occurred. Please check your inputs."
+          );
         }
       } else if (err.response?.status === 409) {
-        setServerError("Email already exists. Please use a different email or try logging in.");
+        setServerError(
+          "Email already exists. Please use a different email or try logging in."
+        );
       } else if (err.response?.status === 404) {
-        setServerError("Registration endpoint not found. Please check server configuration.");
+        setServerError(
+          "Registration endpoint not found. Please check server configuration."
+        );
       } else if (err.response?.status === 400) {
         setServerError("Invalid registration data. Please check your inputs.");
       } else if (err.response?.status === 422) {
-        setServerError("Validation error. Please check your inputs and try again.");
+        setServerError(
+          "Validation error. Please check your inputs and try again."
+        );
       } else {
         setServerError("An unexpected error occurred. Please try again.");
       }
@@ -156,7 +262,10 @@ const Register = () => {
           <div className="space-y-4">
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Full Name
               </label>
               <input
@@ -167,7 +276,7 @@ const Register = () => {
                 value={formData.name}
                 onChange={handleChange}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.name ? 'border-red-300' : 'border-gray-300'
+                  errors.name ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="Enter your full name"
                 disabled={loading}
@@ -179,7 +288,10 @@ const Register = () => {
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email Address
               </label>
               <input
@@ -190,7 +302,7 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
+                  errors.email ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="Enter your email"
                 disabled={loading}
@@ -202,7 +314,10 @@ const Register = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="mt-1 relative">
@@ -214,7 +329,7 @@ const Register = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`appearance-none relative block w-full px-3 py-2 pr-10 border ${
-                    errors.password ? 'border-red-300' : 'border-gray-300'
+                    errors.password ? "border-red-300" : "border-gray-300"
                   } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                   placeholder="Create a password"
                   disabled={loading}
@@ -238,7 +353,12 @@ const Register = () => {
               {formData.password && formData.password.length > 0 && (
                 <div className="mt-1">
                   <div className="text-xs text-gray-600">
-                    Password strength: {formData.password.length >= 8 ? "Strong" : formData.password.length >= 6 ? "Medium" : "Weak"}
+                    Password strength:{" "}
+                    {formData.password.length >= 8
+                      ? "Strong"
+                      : formData.password.length >= 6
+                      ? "Medium"
+                      : "Weak"}
                   </div>
                 </div>
               )}
@@ -288,11 +408,17 @@ const Register = () => {
           <div className="text-center">
             <p className="text-xs text-gray-600">
               By creating an account, you agree to our{" "}
-              <Link to="/terms" className="text-indigo-600 hover:text-indigo-500">
+              <Link
+                to="/terms"
+                className="text-indigo-600 hover:text-indigo-500"
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link to="/privacy" className="text-indigo-600 hover:text-indigo-500">
+              <Link
+                to="/privacy"
+                className="text-indigo-600 hover:text-indigo-500"
+              >
                 Privacy Policy
               </Link>
             </p>

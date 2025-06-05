@@ -155,14 +155,23 @@ const MoneyManage = () => {
       alert("No data to export");
       return;
     }
-
+    console.log(transactions, "/////////////////////");
     const exportData = transactions.map(
-      ({ title, amount, type, createdAt }) => ({
-        Title: title,
-        Amount: amount,
-        Type: type,
-        Date: new Date(createdAt).toLocaleDateString(),
-      })
+      ({ title, amount, type, createdAt }) => {
+        const date = new Date(createdAt);
+        return {
+          Title: title,
+          Amount: amount,
+          Type: type,
+          Date: date.toLocaleDateString(), // e.g., "6/4/2025"
+          Time: date.toLocaleTimeString("en-GB", {
+            // e.g., "12:40:25"
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }),
+        };
+      }
     );
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -195,6 +204,12 @@ const MoneyManage = () => {
 
   const fetchTransactions = async (isRetry = false) => {
     try {
+      // Add debouncing to prevent rapid calls
+      if (loading && !isRetry) {
+        console.log("Already loading, skipping fetch");
+        return;
+      }
+
       setLoading(true);
       setError("");
 
@@ -600,90 +615,325 @@ const MoneyManage = () => {
     }
   };
 
-
   return (
-    <div className="flex flex-col items-center bg-gray-100 min-h-screen p-4">
-      <div className="w-full max-w-2xl p-8 bg-gradient-to-r from-blue-600 to-blue-400 rounded-xl text-center text-white shadow-xl mb-8 transform hover:scale-105 transition-transform duration-300">
-        <h1 className="text-4xl font-bold">Hi {username}</h1>
-        <p className="text-xl mt-2 font-light">
+    // <div className="flex flex-col items-center bg-gray-100 min-h-screen p-4">
+    //   <div className="w-full max-w-2xl p-8 bg-gradient-to-r from-blue-600 to-blue-400 rounded-xl text-center text-white shadow-xl mb-8 transform hover:scale-105 transition-transform duration-300">
+    //     <h1 className="text-4xl font-bold">Hi {username}</h1>
+    //     <p className="text-xl mt-2 font-light">
+    //       Welcome back to your Money Manager
+    //     </p>
+    //   </div>
+
+    //   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-3xl mb-8">
+    //     <div className="p-6 bg-white text-gray-800 rounded-xl text-center shadow-lg border-t-4 border-blue-500">
+    //       <h2 className="text-lg font-semibold text-gray-600">Your Balance</h2>
+    //       <p
+    //         className={`text-3xl font-bold mt-3 ${
+    //           getBalance() >= 0 ? "text-blue-600" : "text-red-600"
+    //         }`}
+    //       >
+    //         ₹{getBalance().toFixed(2)}
+    //       </p>
+    //     </div>
+    //     <div className="p-6 bg-white text-gray-800 rounded-xl text-center shadow-lg border-t-4 border-green-500">
+    //       <h2 className="text-lg font-semibold text-gray-600">Your Income</h2>
+    //       <p className="text-3xl font-bold mt-3 text-green-600">
+    //         ₹{getIncome().toFixed(2)}
+    //       </p>
+    //     </div>
+    //     <div className="p-6 bg-white text-gray-800 rounded-xl text-center shadow-lg border-t-4 border-red-500">
+    //       <h2 className="text-lg font-semibold text-gray-600">Your Expenses</h2>
+    //       <p className="text-3xl font-bold mt-3 text-red-600">
+    //         ₹{getExpenses().toFixed(2)}
+    //       </p>
+    //     </div>
+    //   </div>
+
+    //   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-4xl">
+    //     <div className="bg-white p-8 rounded-xl shadow-lg">
+    //       <h2 className="text-2xl font-bold cursor-pointer mb-6 text-gray-800 border-b pb-2">
+    //         {editId ? "Update Transaction" : "Add Transaction"}
+    //       </h2>
+    //       {error && (
+    //         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
+    //           <p className="text-red-700">{error}</p>
+    //         </div>
+    //       )}
+    //       <form onSubmit={handleSubmit} className="space-y-5">
+    //         <div className="flex flex-col">
+    //           <label className="text-gray-700 mb-2 font-medium">Title</label>
+    //           <input
+    //             type="text"
+    //             placeholder="What was it for?"
+    //             value={selectTitle}
+    //             onChange={(e) => setSelectTitle(e.target.value)}
+    //             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+    //             disabled={loading}
+    //           />
+    //         </div>
+
+    //         <div className="flex flex-col">
+    //           <label className="text-gray-700 mb-2 font-medium">Amount</label>
+    //           <input
+    //             type="number"
+    //             placeholder="Amount in ₹"
+    //             value={selectAmount}
+    //             onChange={(e) => setSelectAmount(e.target.value)}
+    //             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+    //             disabled={loading}
+    //           />
+    //         </div>
+
+    //         <div className="flex flex-col">
+    //           <label className="text-gray-700 mb-2 font-medium">Type</label>
+    //           <select
+    //             value={selectType}
+    //             onChange={(e) => setType(e.target.value)}
+    //             className="w-full cursor-pointer p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white transition-all"
+    //             style={{
+    //               backgroundImage:
+    //                 "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')",
+    //               backgroundRepeat: "no-repeat",
+    //               backgroundPosition: "right 1rem top 50%",
+    //               backgroundSize: "0.65rem auto",
+    //               paddingRight: "2.5rem",
+    //             }}
+    //             disabled={loading}
+    //           >
+    //             {transactionTypeOptions.map((option) => (
+    //               <option key={option.optionId} value={option.optionId}>
+    //                 {option.displayText}
+    //               </option>
+    //             ))}
+    //           </select>
+    //         </div>
+
+    //         <button
+    //           type="submit"
+    //           className={`w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg shadow-md hover:shadow-lg transform hover:translate-y-0.5 transition-all duration-200 ${
+    //             loading ? "opacity-70 cursor-not-allowed" : ""
+    //           }`}
+    //           disabled={loading}
+    //         >
+    //           {loading ? (
+    //             <span className="flex items-center justify-center">
+    //               <svg
+    //                 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+    //                 xmlns="http://www.w3.org/2000/svg"
+    //                 fill="none"
+    //                 viewBox="0 0 24 24"
+    //               >
+    //                 <circle
+    //                   className="opacity-25"
+    //                   cx="12"
+    //                   cy="12"
+    //                   r="10"
+    //                   stroke="currentColor"
+    //                   strokeWidth="4"
+    //                 ></circle>
+    //                 <path
+    //                   className="opacity-75"
+    //                   fill="currentColor"
+    //                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    //                 ></path>
+    //               </svg>
+    //               Processing...
+    //             </span>
+    //           ) : (
+    //             `${editId ? "Update" : "Add"} Transaction`
+    //           )}
+    //         </button>
+
+    //         {editId && (
+    //           <button
+    //             type="button"
+    //             onClick={() => {
+    //               setEditId(null);
+    //               setSelectTitle("");
+    //               setSelectAmount("");
+    //               setType(transactionTypeOptions[0].optionId);
+    //             }}
+    //             className="w-full bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+    //             disabled={loading}
+    //           >
+    //             Cancel
+    //           </button>
+    //         )}
+    //       </form>
+    //     </div>
+    //     <div className="bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-lg max-w-full">
+    //       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    //         <div className="flex gap-2 border-b-2 border-blue-500 pb-2">
+    //           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 hr-2">
+    //             Transaction History
+    //           </h2>
+    //           <button
+    //             onClick={handleExport}
+    //             className="bg-green-500 cursor-pointer hover:bg-green-600 text-white px-4 py-1.5 rounded-md text-sm font-medium shadow"
+    //           >
+    //             Export to Excel
+    //           </button>
+    //           <button
+    //             onClick={handleDeleteAll}
+    //             className="bg-red-500 cursor-pointer hover:bg-red-600 text-white px-4 py-1.5 rounded-md text-sm font-medium shadow"
+    //           >
+    //             Delete All
+    //           </button>
+    //         </div>
+    //       </div>
+
+    //       <div className="space-y-3 max-h-[26rem] overflow-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+    //         {loading && transactions.length === 0 ? (
+    //           <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-50 rounded-lg">
+    //             <svg
+    //               className="animate-spin h-10 w-10 text-blue-500 mb-3"
+    //               xmlns="http://www.w3.org/2000/svg"
+    //               fill="none"
+    //               viewBox="0 0 24 24"
+    //             >
+    //               <circle
+    //                 className="opacity-25"
+    //                 cx="12"
+    //                 cy="12"
+    //                 r="10"
+    //                 stroke="currentColor"
+    //                 strokeWidth="4"
+    //               ></circle>
+    //               <path
+    //                 className="opacity-75"
+    //                 fill="currentColor"
+    //                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    //               ></path>
+    //             </svg>
+    //             <p className="text-gray-500 text-center font-medium">
+    //               Loading transactions...
+    //             </p>
+    //           </div>
+    //         ) : transactions.length === 0 ? (
+    //           <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+    //             <svg
+    //               xmlns="http://www.w3.org/2000/svg"
+    //               className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3"
+    //               fill="none"
+    //               viewBox="0 0 24 24"
+    //               stroke="currentColor"
+    //             >
+    //               <path
+    //                 strokeLinecap="round"
+    //                 strokeLinejoin="round"
+    //                 strokeWidth={1.5}
+    //                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+    //               />
+    //             </svg>
+    //             <p className="text-gray-500 text-center font-medium">
+    //               No transactions yet
+    //             </p>
+    //             <p className="text-gray-400 text-sm text-center mt-2">
+    //               Add your first transaction to start tracking
+    //             </p>
+    //           </div>
+    //         ) : (
+    //           <div className="divide-y divide-gray-100">
+    //             {transactions.map((transaction) => (
+    //               <Add
+    //                 key={transaction._id}
+    //                 transaction={transaction}
+    //                 onEdit={handleEdit}
+    //                 onDelete={handleDelete}
+    //                 isLoading={loading}
+    //               />
+    //             ))}
+    //           </div>
+    //         )}
+    //       </div>
+    //     </div>
+    //   </div>
+    // </div>
+    <div className="flex flex-col items-center bg-gray-50 min-h-screen p-2">
+      {/* Header - Compact for mobile */}
+      <div className="w-full max-w-md p-4 bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg text-center text-white shadow-lg mb-4">
+        <h1 className="text-2xl font-bold">Hi {username}</h1>
+        <p className="text-sm mt-1 opacity-90">
           Welcome back to your Money Manager
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-3xl mb-8">
-        <div className="p-6 bg-white text-gray-800 rounded-xl text-center shadow-lg border-t-4 border-blue-500">
-          <h2 className="text-lg font-semibold text-gray-600">Your Balance</h2>
+      {/* Stats Cards - Mobile optimized */}
+      <div className="grid grid-cols-3 gap-2 w-full max-w-md mb-4">
+        <div className="p-3 bg-white text-gray-800 rounded-lg text-center shadow-md border-t-2 border-blue-500">
+          <h2 className="text-xs font-medium text-gray-600 mb-1">Balance</h2>
           <p
-            className={`text-3xl font-bold mt-3 ${
+            className={`text-lg font-bold ${
               getBalance() >= 0 ? "text-blue-600" : "text-red-600"
             }`}
           >
-            ₹{getBalance().toFixed(2)}
+            ₹{getBalance().toFixed(0)}
           </p>
         </div>
-        <div className="p-6 bg-white text-gray-800 rounded-xl text-center shadow-lg border-t-4 border-green-500">
-          <h2 className="text-lg font-semibold text-gray-600">Your Income</h2>
-          <p className="text-3xl font-bold mt-3 text-green-600">
-            ₹{getIncome().toFixed(2)}
+        <div className="p-3 bg-white text-gray-800 rounded-lg text-center shadow-md border-t-2 border-green-500">
+          <h2 className="text-xs font-medium text-gray-600 mb-1">Income</h2>
+          <p className="text-lg font-bold text-green-600">
+            ₹{getIncome().toFixed(0)}
           </p>
         </div>
-        <div className="p-6 bg-white text-gray-800 rounded-xl text-center shadow-lg border-t-4 border-red-500">
-          <h2 className="text-lg font-semibold text-gray-600">Your Expenses</h2>
-          <p className="text-3xl font-bold mt-3 text-red-600">
-            ₹{getExpenses().toFixed(2)}
+        <div className="p-3 bg-white text-gray-800 rounded-lg text-center shadow-md border-t-2 border-red-500">
+          <h2 className="text-xs font-medium text-gray-600 mb-1">Expenses</h2>
+          <p className="text-lg font-bold text-red-600">
+            ₹{getExpenses().toFixed(0)}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-4xl">
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-bold cursor-pointer mb-6 text-gray-800 border-b pb-2">
-            {editId ? "Update Transaction" : "Add Transaction"}
+      {/* Single Column Layout for Mobile */}
+      <div className="w-full max-w-md space-y-4">
+        {/* Add Transaction Form - Compact */}
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <h2 className="text-lg font-bold mb-3 text-gray-800 border-b pb-2">
+            {editId ? "Update" : "Add"} Transaction
           </h2>
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
+            <div className="bg-red-50 border-l-2 border-red-500 p-2 mb-3 rounded text-sm">
               <p className="text-red-700">{error}</p>
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="flex flex-col">
-              <label className="text-gray-700 mb-2 font-medium">Title</label>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="text-gray-700 text-sm font-medium block mb-1">
+                Title
+              </label>
               <input
                 type="text"
                 placeholder="What was it for?"
                 value={selectTitle}
                 onChange={(e) => setSelectTitle(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full p-2.5 placeholder:text-gray-400 placeholder:font-light text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 disabled={loading}
               />
             </div>
 
-            <div className="flex flex-col">
-              <label className="text-gray-700 mb-2 font-medium">Amount</label>
+            <div>
+              <label className="text-gray-700  placeholder:text-gray-400 placeholder:font-light text-sm font-medium block mb-1">
+                Amount
+              </label>
               <input
                 type="number"
                 placeholder="Amount in ₹"
                 value={selectAmount}
+                onWheel={(e) => e.target.blur()} // ✅ Prevent scroll from changing value
                 onChange={(e) => setSelectAmount(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full p-2.5 text-sm  placeholder:text-gray-400 placeholder:font-light border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 disabled={loading}
               />
             </div>
 
-            <div className="flex flex-col">
-              <label className="text-gray-700 mb-2 font-medium">Type</label>
+            <div>
+              <label className="text-gray-700 text-sm font-medium block mb-1">
+                Type
+              </label>
               <select
                 value={selectType}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full cursor-pointer p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white transition-all"
-                style={{
-                  backgroundImage:
-                    "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')",
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 1rem top 50%",
-                  backgroundSize: "0.65rem auto",
-                  paddingRight: "2.5rem",
-                }}
+                className="w-full p-2.5 text-sm cursor-pointer border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                 disabled={loading}
               >
                 {transactionTypeOptions.map((option) => (
@@ -696,7 +946,7 @@ const MoneyManage = () => {
 
             <button
               type="submit"
-              className={`w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg shadow-md hover:shadow-lg transform hover:translate-y-0.5 transition-all duration-200 ${
+              className={`w-full bg-blue-600 text-white py-2.5 cursor-pointer rounded-md hover:bg-blue-700 font-medium text-sm shadow-md ${
                 loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
               disabled={loading}
@@ -704,7 +954,7 @@ const MoneyManage = () => {
               {loading ? (
                 <span className="flex items-center justify-center">
                   <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -739,7 +989,7 @@ const MoneyManage = () => {
                   setSelectAmount("");
                   setType(transactionTypeOptions[0].optionId);
                 }}
-                className="w-full bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                className="w-full cursor-pointer bg-gray-200 text-gray-800 py-2.5 rounded-md hover:bg-gray-300 font-medium text-sm"
                 disabled={loading}
               >
                 Cancel
@@ -747,32 +997,32 @@ const MoneyManage = () => {
             )}
           </form>
         </div>
-        <div className="bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-lg max-w-full">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-            <div className="flex gap-2 border-b-2 border-blue-500 pb-2">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 hr-2">
-                Transaction History
-              </h2>
+
+        {/* Transaction History - Mobile optimized */}
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-bold text-gray-800">History</h2>
+            <div className="flex gap-1">
               <button
                 onClick={handleExport}
-                className="bg-green-500 cursor-pointer hover:bg-green-600 text-white px-4 py-1.5 rounded-md text-sm font-medium shadow"
+                className="bg-green-500 cursor-pointer hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium"
               >
-                Export to Excel
+                Export
               </button>
               <button
                 onClick={handleDeleteAll}
-                className="bg-red-500 cursor-pointer hover:bg-red-600 text-white px-4 py-1.5 rounded-md text-sm font-medium shadow"
+                className="bg-red-500 hover:bg-red-600 cursor-pointer text-white px-2 py-1 rounded text-xs font-medium"
               >
-                Delete All
+                Clear All
               </button>
             </div>
           </div>
 
-          <div className="space-y-3 max-h-[26rem] overflow-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="space-y-2 max-h-80 overflow-auto">
             {loading && transactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-50 rounded-lg">
+              <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-md">
                 <svg
-                  className="animate-spin h-10 w-10 text-blue-500 mb-3"
+                  className="animate-spin h-6 w-6 text-blue-500 mb-2"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -791,15 +1041,13 @@ const MoneyManage = () => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                <p className="text-gray-500 text-center font-medium">
-                  Loading transactions...
-                </p>
+                <p className="text-gray-500 text-sm">Loading...</p>
               </div>
             ) : transactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+              <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-md border border-dashed border-gray-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3"
+                  className="h-8 w-8 text-gray-400 mb-2"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -811,15 +1059,15 @@ const MoneyManage = () => {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <p className="text-gray-500 text-center font-medium">
+                <p className="text-gray-500 text-sm font-medium">
                   No transactions yet
                 </p>
-                <p className="text-gray-400 text-sm text-center mt-2">
-                  Add your first transaction to start tracking
+                <p className="text-gray-400 text-xs mt-1">
+                  Add your first transaction
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="space-y-2">
                 {transactions.map((transaction) => (
                   <Add
                     key={transaction._id}
@@ -839,5 +1087,3 @@ const MoneyManage = () => {
 };
 
 export default MoneyManage;
-
-

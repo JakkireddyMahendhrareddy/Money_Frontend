@@ -2,7 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
-import { backEndUrl } from '../utils/utils.js';
+import { backEndUrl } from "../utils/utils.js";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,6 +21,40 @@ const Login = () => {
     }
   }, [navigate]);
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setError("");
+  //   setLoading(true);
+
+  //   if (!email || !password) {
+  //     setError("Please fill in all fields.");
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const { data } = await axios.post(LoginUrl, { email, password });
+
+  //     if (data.success) {
+  //       localStorage.setItem("token", data.token);
+  //       localStorage.setItem("username", data.user.name);
+  //       navigate("/");
+  //     } else {
+  //       setError(data.message || "Invalid credentials");
+  //     }
+  //   } catch (err) {
+  //     if (err.response?.data?.message) {
+  //       setError(err.response.data.message);
+  //     } else if (err.response?.status === 404) {
+  //       setError("Login endpoint not found. Please check server configuration.");
+  //     } else {
+  //       setError("An unexpected error occurred. Please try again.");
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -33,20 +67,44 @@ const Login = () => {
     }
 
     try {
-      const { data } = await axios.post(LoginUrl, { email, password });
+      const { data } = await axios.post(
+        LoginUrl,
+        {
+          email,
+          password,
+        },
+        {
+          timeout: 8000, // 8 second timeout
+        }
+      );
 
       if (data.success) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("username", data.user.name);
+        // Navigate immediately
         navigate("/");
       } else {
         setError(data.message || "Invalid credentials");
       }
     } catch (err) {
+      // Handle timeout specifically
+      if (err.code === "ECONNABORTED") {
+        setError(
+          "Request timed out. Please check your connection and try again."
+        );
+        return;
+      }
+
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 404) {
-        setError("Login endpoint not found. Please check server configuration.");
+        setError(
+          "Login endpoint not found. Please check server configuration."
+        );
+      } else if (err.response?.status === 401) {
+        setError("Invalid email or password. Please try again.");
+      } else if (err.response?.status === 429) {
+        setError("Too many login attempts. Please wait and try again.");
       } else {
         setError("An unexpected error occurred. Please try again.");
       }
@@ -71,7 +129,10 @@ const Login = () => {
           )}
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email address
               </label>
               <input
@@ -88,7 +149,10 @@ const Login = () => {
             </div>
 
             <div className="relative">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <input
@@ -129,7 +193,10 @@ const Login = () => {
           <div className="text-center">
             <span className="text-sm text-gray-600">
               Don&apos;t have an account?{" "}
-              <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link
+                to="/register"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
                 Sign up
               </Link>
             </span>

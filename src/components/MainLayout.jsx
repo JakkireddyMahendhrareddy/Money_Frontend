@@ -1,6 +1,7 @@
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import MoneyManage from "./MoneyManage";
+import { LogOut } from "lucide-react";
 
 const MainLayout = () => {
   const { logout } = useAuth();
@@ -38,23 +39,11 @@ const MainLayout = () => {
             </span>
             <button
               onClick={handleLogout}
-              className="text-white hover:text-red-400 transition"
+              className="flex w-full cursor-pointer max-w-[200px] mx-auto items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white text-base font-medium py-2 px-4 rounded-full shadow-sm transition duration-200 ease-in-out"
               title="Logout"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6 text-white hover:text-red-500 cursor-pointer transition"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M10 16l4-4m0 0l-4-4m4 4H3m13 4v1m0-10v1"
-                />
-              </svg>
+              <LogOut size={18} />
+              Logout
             </button>
           </div>
         </div>
@@ -77,3 +66,20 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
+
+{
+  /* <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6 text-white hover:text-red-500 cursor-pointer transition"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10 16l4-4m0 0l-4-4m4 4H3m13 4v1m0-10v1"
+                />
+              </svg> */
+}
