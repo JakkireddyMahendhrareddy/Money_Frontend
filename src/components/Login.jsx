@@ -114,20 +114,114 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
+    // <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    //   <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
+    //     <div>
+    //       <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    //         Sign in to your account
+    //       </h2>
+    //     </div>
+    //     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+    //       {error && (
+    //         <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded">
+    //           {error}
+    //         </div>
+    //       )}
+    //       <div className="space-y-4">
+    //         <div>
+    //           <label
+    //             htmlFor="email"
+    //             className="block text-sm font-medium text-gray-700"
+    //           >
+    //             Email address
+    //           </label>
+    //           <input
+    //             id="email"
+    //             name="email"
+    //             type="email"
+    //             autoComplete="email"
+    //             required
+    //             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+    //             placeholder="Email address"
+    //             value={email}
+    //             onChange={(e) => setEmail(e.target.value)}
+    //           />
+    //         </div>
+
+    //         <div className="relative">
+    //           <label
+    //             htmlFor="password"
+    //             className="block text-sm font-medium text-gray-700"
+    //           >
+    //             Password
+    //           </label>
+    //           <input
+    //             id="password"
+    //             name="password"
+    //             type={showPassword ? "text" : "password"}
+    //             autoComplete="current-password"
+    //             required
+    //             className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+    //             placeholder="Password"
+    //             value={password}
+    //             onChange={(e) => setPassword(e.target.value)}
+    //           />
+    //           <button
+    //             type="button"
+    //             className="absolute top-9 right-0 pr-3 flex items-center"
+    //             onClick={() => setShowPassword(!showPassword)}
+    //           >
+    //             {showPassword ? (
+    //               <EyeSlashIcon className="h-5 w-5 text-gray-400 cursor-pointer" />
+    //             ) : (
+    //               <EyeIcon className="h-5 w-5 text-gray-400 cursor-pointer" />
+    //             )}
+    //           </button>
+    //         </div>
+    //       </div>
+
+    //       <div>
+    //         <button
+    //           type="submit"
+    //           disabled={loading}
+    //           className="group relative w-full cursor-pointer flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+    //         >
+    //           {loading ? "Signing in..." : "Sign in"}
+    //         </button>
+    //       </div>
+
+    //       <div className="text-center">
+    //         <span className="text-sm text-gray-600">
+    //           Don&apos;t have an account?{" "}
+    //           <Link
+    //             to="/register"
+    //             className="font-medium text-indigo-600 hover:text-indigo-500"
+    //           >
+    //             Sign up
+    //           </Link>
+    //         </span>
+    //       </div>
+    //     </form>
+    //   </div>
+    // </div>
+
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="w-full max-w-sm sm:max-w-md space-y-6 p-6 sm:p-8 bg-white rounded-xl shadow-md">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-gray-900">
             Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+
+        <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded text-sm">
               {error}
             </div>
           )}
+
           <div className="space-y-4">
+            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -141,13 +235,14 @@ const Login = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 text-gray-900 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
+            {/* Password */}
             <div className="relative">
               <label
                 htmlFor="password"
@@ -161,45 +256,45 @@ const Login = () => {
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 required
-                className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md placeholder-gray-500 text-gray-900 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
-                className="absolute top-9 right-0 pr-3 flex items-center"
+                className="absolute top-9 right-3 flex items-center"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
-                  <EyeSlashIcon className="h-5 w-5 text-gray-400 cursor-pointer" />
+                  <EyeSlashIcon className="h-5 w-5 text-gray-400" />
                 ) : (
-                  <EyeIcon className="h-5 w-5 text-gray-400 cursor-pointer" />
+                  <EyeIcon className="h-5 w-5 text-gray-400" />
                 )}
               </button>
             </div>
           </div>
 
+          {/* Submit */}
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full cursor-pointer flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex cursor-pointer justify-center py-2 px-4 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </div>
 
-          <div className="text-center">
-            <span className="text-sm text-gray-600">
-              Don&apos;t have an account?{" "}
-              <Link
-                to="/register"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Sign up
-              </Link>
-            </span>
+          {/* Redirect */}
+          <div className="text-center text-sm text-gray-600">
+            Don’t have an account?{" "}
+            <Link
+              to="/register"
+              className="font-medium cursor-pointer text-indigo-600 hover:text-indigo-500"
+            >
+              Sign up
+            </Link>
           </div>
         </form>
       </div>
