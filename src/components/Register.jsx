@@ -510,8 +510,9 @@ const Register = () => {
                   onChange={handleChange}
                   className={`block w-full px-3 py-2 text-sm pr-10 border ${
                     errors.password ? "border-red-300" : "border-gray-300"
-                  } rounded-md placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500`}
-                  placeholder="Create a simple password that you won't forget."
+                  } rounded-md placeholder-red-300 focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="Make an easy password you can remember."
+
 
 
                   disabled={loading}
