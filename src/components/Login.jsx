@@ -21,64 +21,6 @@ const Login = () => {
     }
   }, [navigate]);
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setError("");
-  //   setLoading(true);
-
-  //   if (!email || !password) {
-  //     setError("Please fill in all fields.");
-  //     setLoading(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     const { data } = await axios.post(
-  //       LoginUrl,
-  //       {
-  //         email,
-  //         password,
-  //       },
-  //       {
-  //         timeout: 8000, // 8 second timeout
-  //       }
-  //     );
-
-  //     if (data.success) {
-  //       localStorage.setItem("token", data.token);
-  //       localStorage.setItem("username", data.user.name);
-  //       // Navigate immediately
-  //       navigate("/");
-  //     } else {
-  //       setError(data.message || "Invalid credentials");
-  //     }
-  //   } catch (err) {
-  //     // Handle timeout specifically
-  //     if (err.code === "ECONNABORTED") {
-  //       setError(
-  //         "Request timed out. Please check your connection and try again."
-  //       );
-  //       return;
-  //     }
-
-  //     if (err.response?.data?.message) {
-  //       setError(err.response.data.message);
-  //     } else if (err.response?.status === 404) {
-  //       setError(
-  //         "Login endpoint not found. Please check server configuration."
-  //       );
-  //     } else if (err.response?.status === 401) {
-  //       setError("Invalid email or password. Please try again.");
-  //     } else if (err.response?.status === 429) {
-  //       setError("Too many login attempts. Please wait and try again.");
-  //     } else {
-  //       setError("An unexpected error occurred. Please try again.");
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -98,27 +40,85 @@ const Login = () => {
           password,
         },
         {
-          timeout: 5000, // Reduce timeout
-          headers: {
-            "Content-Type": "application/json",
-          },
+          timeout: 5000, // 8 second timeout
         }
       );
 
       if (data.success) {
-        // Batch localStorage operations
         localStorage.setItem("token", data.token);
         localStorage.setItem("username", data.user.name);
+        // Navigate immediately
         navigate("/");
       } else {
         setError(data.message || "Invalid credentials");
       }
     } catch (err) {
-      // Your existing error handling
+      // Handle timeout specifically
+      if (err.code === "ECONNABORTED") {
+        setError(
+          "Request timed out. Please refersh and try again."
+        );
+        return;
+      }
+
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.status === 404) {
+        setError(
+          "Login endpoint not found. Please check server configuration."
+        );
+      } else if (err.response?.status === 401) {
+        setError("Invalid email or password. Please try again.");
+      } else if (err.response?.status === 429) {
+        setError("Too many login attempts. Please wait and try again.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setError("");
+  //   setLoading(true);
+
+  //   if (!email || !password) {
+  //     setError("Please fill in all fields.");
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const { data } = await axios.post(
+  //       LoginUrl,
+  //       {
+  //         email,
+  //         password,
+  //       },
+  //       {
+  //         timeout: 5000, // Reduce timeout
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+
+  //     if (data.success) {
+  //       // Batch localStorage operations
+  //       localStorage.setItem("token", data.token);
+  //       localStorage.setItem("username", data.user.name);
+  //       navigate("/");
+  //     } else {
+  //       setError(data.message || "Invalid credentials");
+  //     }
+  //   } catch (err) {
+  //     // Your existing error handling
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -131,7 +131,7 @@ const Login = () => {
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-sm text-sm">
+            <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded text-sm">
               {error}
             </div>
           )}
