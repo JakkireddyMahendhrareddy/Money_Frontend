@@ -616,7 +616,6 @@ const MoneyManage = () => {
   };
 
   return (
-  
     <div className="flex flex-col items-center bg-gray-50 min-h-screen p-2">
       {/* Header - Compact for mobile */}
       <div className="w-full max-w-md p-4 bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg text-center text-white shadow-lg mb-4">
@@ -667,7 +666,7 @@ const MoneyManage = () => {
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label className="text-gray-700 text-sm font-medium block mb-1">
-                Title
+                What is this for?
               </label>
               <input
                 type="text"
@@ -681,7 +680,7 @@ const MoneyManage = () => {
 
             <div>
               <label className="text-gray-700  placeholder:text-gray-400 placeholder:font-light text-sm font-medium block mb-1">
-                Amount
+                How Much?
               </label>
               <input
                 type="number"
@@ -696,7 +695,7 @@ const MoneyManage = () => {
 
             <div>
               <label className="text-gray-700 text-sm font-medium block mb-1">
-                Type
+                  Is this Income or Expense?
               </label>
               <select
                 value={selectType}
