@@ -66,7 +66,7 @@ const MainLayout = () => {
           <p>
             © {new Date().getFullYear()} Money Manager. All rights reserved.
           </p>
-          <p className="mt-1 text-gray-400">Track your finances with ease</p>
+          <p className="mt-1 text-gray-400">Track your finances with easy</p>
         </div>
       </footer>
     </div>
