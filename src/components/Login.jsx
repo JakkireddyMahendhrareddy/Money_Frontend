@@ -124,14 +124,14 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="w-full max-w-sm sm:max-w-md space-y-6 p-6 sm:p-8 bg-white rounded-xl shadow-md">
         <div>
-          <h2 className="text-center text-2xl sm:text-3xl font-bold text-gray-900">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-gray-800">
             Sign in to your account
           </h2>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded text-sm">
+            <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-sm text-sm">
               {error}
             </div>
           )}
